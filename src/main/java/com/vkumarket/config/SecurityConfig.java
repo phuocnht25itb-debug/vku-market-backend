@@ -1,4 +1,4 @@
-package com.vkumarket.config; // Hoặc package com.vkumarket.security tùy dự án của bạn
+package com.vkumarket.config; // Lưu ý đổi đúng tên package của bạn nếu nằm ở com.vkumarket.security
 
 import com.vkumarket.security.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
@@ -49,13 +49,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         
-        // Cho phép tất cả các domain từ Vercel và Localhost kết nối tới
-        config.setAllowedOriginPatterns(List.of(
-            "https://*.vercel.app",
-            "http://localhost:*"
-        ));
+        // Dùng setAllowedOriginPatterns với "*" để chấp nhận MỌI URL frontend (Vercel, Localhost, Custom Domain)
+        config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
