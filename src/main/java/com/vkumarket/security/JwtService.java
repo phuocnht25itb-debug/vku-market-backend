@@ -1,5 +1,6 @@
 package com.vkumarket.security;
 
+import com.vkumarket.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -13,15 +14,20 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    // Thêm giá trị mặc định đằng sau dấu : để không bị crash khi Railway thiếu biến môi trường
     @Value("${app.jwt.secret:vku_market_jwt_secret_key_2024_secure_and_long_enough_32bytes}")
     private String secretKey;
 
-    @Value("${app.jwt.expiration:86400000}") // Mặc định 24h (86400000 ms)
+    @Value("${app.jwt.expiration:86400000}")
     private long expiration;
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+    }
+
+    // Phương thức nhận truyền vào đối tượng User (khắc phục lỗi biên dịch)
+    public String generate(User user) {
+        String roleName = user.getRole() != null ? user.getRole().name() : "USER";
+        return generateToken(user.getUsername(), roleName);
     }
 
     public String generateToken(String username, String role) {
