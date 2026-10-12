@@ -34,6 +34,8 @@ public class SecurityConfig {
             .cors(Customizer.withDefaults())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // BẮT BUỘC: Cho phép tất cả request OPTIONS (Preflight của CORS)
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/posts", "/api/posts/*", "/api/categories", "/uploads/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
@@ -46,7 +48,6 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
-        // Cho phép tất cả các Origin kết nối (bao gồm cả localhost và mọi domain Vercel)
         cfg.setAllowedOriginPatterns(List.of("*"));
         cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         cfg.setAllowedHeaders(List.of("*"));
