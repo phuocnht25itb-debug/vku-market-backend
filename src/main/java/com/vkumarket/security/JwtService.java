@@ -24,7 +24,7 @@ public class JwtService {
         return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
-    // Phương thức nhận truyền vào đối tượng User (khắc phục lỗi biên dịch)
+    // Phương thức nhận đối tượng User trực tiếp để khớp với AuthController
     public String generate(User user) {
         String roleName = user.getRole() != null ? user.getRole().name() : "USER";
         return generateToken(user.getUsername(), roleName);
