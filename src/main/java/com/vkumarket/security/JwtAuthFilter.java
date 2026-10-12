@@ -1,40 +1,44 @@
 package com.vkumarket.security;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.filter.OncePerRequestFilter;
-import java.io.IOException;
-import java.util.List;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
-public class JwtAuthFilter extends OncePerRequestFilter {
-    private final JwtService jwtService;
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
 
-    public JwtAuthFilter(JwtService jwtService) {
-        this.jwtService = jwtService;
+@Service
+public class JwtService {
+
+    // Thêm giá trị mặc định đằng sau dấu : để không bị crash khi Railway thiếu biến môi trường
+    @Value("${app.jwt.secret:vku_market_jwt_secret_key_2024_secure_and_long_enough_32bytes}")
+    private String secretKey;
+
+    @Value("${app.jwt.expiration:86400000}") // Mặc định 24h (86400000 ms)
+    private long expiration;
+
+    private SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                    FilterChain chain) throws ServletException, IOException {
-        String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ")) {
-            try {
-                Claims claims = jwtService.parse(header.substring(7));
-                var auth = new UsernamePasswordAuthenticationToken(
-                        claims.getSubject(), null,
-                        List.of(new SimpleGrantedAuthority("ROLE_" + claims.get("role", String.class))));
-                SecurityContextHolder.getContext().setAuthentication(auth);
-            } catch (JwtException | IllegalArgumentException ignored) {
-                // token không hợp lệ: coi như chưa đăng nhập
-            }
-        }
-        chain.doFilter(request, response);
+    public String generateToken(String username, String role) {
+        return Jwts.builder()
+                .subject(username)
+                .claim("role", role)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    public Claims parse(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }
