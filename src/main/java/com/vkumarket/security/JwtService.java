@@ -24,15 +24,16 @@ public class JwtService {
         return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
-    // Sử dụng getUsername() đúng chuẩn Java Bean
+    // Phương thức generate(User user) nhận đối tượng User trực tiếp từ AuthController
     public String generate(User user) {
         String roleName = user.getRole() != null ? user.getRole().name() : "USER";
-        return generateToken(user.getUsername(), roleName);
+        // Sử dụng getEmail() vì hệ thống của bạn dùng Email làm Username/Subject
+        return generateToken(user.getEmail(), roleName);
     }
 
-    public String generateToken(String username, String role) {
+    public String generateToken(String subject, String role) {
         return Jwts.builder()
-                .subject(username)
+                .subject(subject)
                 .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
